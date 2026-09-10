@@ -1,0 +1,2 @@
+Place your sample bus dashboard camera video file here (e.g. sample.mp4).
+Configure VIDEO_PATH in .env to point to your video file.

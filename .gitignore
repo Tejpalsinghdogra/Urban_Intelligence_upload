@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Video & Frames temp storage
+detector/frames/*.jpg
+detector/frames/*.png
+!detector/frames/.gitkeep
+detector/video/*.mp4
+detector/video/*.avi
+detector/video/*.mov
+detector/video/*.mkv
+!detector/video/PLACE_VIDEO_HERE.txt
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Production build output
+dist
+build
+
+# OS metadata
+.DS_Store
+Thumbs.db

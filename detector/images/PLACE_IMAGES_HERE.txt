@@ -1,0 +1,2 @@
+Place any road / pothole images here (.jpg, .png, .jpeg, .webp).
+The detector will scan this folder, send each image to the Roboflow roadlens model, attach GPS coordinates, and broadcast detections in real-time to the dashboard.
