@@ -209,6 +209,97 @@ async function extractFramesFromVideo(videoPath, outputDir, frameInterval) {
 }
 
 /**
+ * Process video by extracting frames and feeding them to Roboflow AI
+ */
+async function processVideoFrames() {
+  const videoFullPath = path.resolve(__dirname, VIDEO_PATH);
+  const framesDir = path.resolve(__dirname, 'frames');
+
+  if (!fs.existsSync(videoFullPath)) {
+    console.warn(`[Detector Video] Video file not found at: ${videoFullPath}`);
+    return runSimulationMode();
+  }
+
+  try {
+    console.log(`\n[Detector Video] Initiating frame extraction for: ${VIDEO_PATH}`);
+    const frameFiles = await extractFramesFromVideo(videoFullPath, framesDir, FRAME_INTERVAL);
+
+    if (!frameFiles || frameFiles.length === 0) {
+      console.warn(`[Detector Video] No frames extracted from video. Defaulting to simulation mode.`);
+      return runSimulationMode();
+    }
+
+    console.log(`[Detector Video] Extracted ${frameFiles.length} frame(s). Commencing AI inference pipeline...`);
+
+    let index = 0;
+    for (const frameFile of frameFiles) {
+      index++;
+      const frameNum = index * FRAME_INTERVAL;
+      const location = getSimulatedLocation(index);
+      const framePath = path.join(framesDir, frameFile);
+
+      console.log(`\n[AI Inference] Analyzing video frame ${index}/${frameFiles.length}: ${frameFile}...`);
+
+      const [potholeRes, vehicleRes] = await Promise.all([
+        queryRoboflow(framePath),
+        queryRoboflowVehicles(framePath)
+      ]);
+
+      // 1. Process Pothole Predictions
+      if (potholeRes && potholeRes.predictions && potholeRes.predictions.length > 0) {
+        for (const pothole of potholeRes.predictions) {
+          logDetection(frameNum, 'pothole', pothole.confidence, location);
+          await sendDetectionToBackend({
+            type: 'pothole',
+            confidence: Number(pothole.confidence.toFixed(2)),
+            timestamp: new Date().toISOString(),
+            lat: location.lat,
+            lng: location.lng
+          });
+        }
+      }
+
+      // 2. Process Vehicle Predictions
+      if (vehicleRes) {
+        let vehicleList = [];
+        if (Array.isArray(vehicleRes.outputs)) {
+          for (const out of vehicleRes.outputs) {
+            if (Array.isArray(out.predictions)) vehicleList.push(...out.predictions);
+            else if (out.predictions?.predictions && Array.isArray(out.predictions.predictions)) vehicleList.push(...out.predictions.predictions);
+            else if (Array.isArray(out)) vehicleList.push(...out);
+          }
+        } else if (Array.isArray(vehicleRes.predictions)) {
+          vehicleList = vehicleRes.predictions;
+        }
+
+        if (vehicleList.length > 0) {
+          const count = vehicleList.length;
+          const avgConfidence = vehicleList.reduce((acc, p) => acc + (p.confidence || 0.8), 0) / count;
+          logDetection(frameNum, 'vehicle', avgConfidence, location, count);
+          await sendDetectionToBackend({
+            type: 'vehicle',
+            confidence: Number(avgConfidence.toFixed(2)),
+            timestamp: new Date().toISOString(),
+            lat: location.lat,
+            lng: location.lng,
+            vehicleCount: count
+          });
+        }
+      }
+
+      // Pause between frames
+      await new Promise(res => setTimeout(res, 2000));
+    }
+
+    console.log(`\n[Detector Video] Completed AI video inspection of all ${frameFiles.length} frames.`);
+  } catch (err) {
+    console.error(`[Detector Video Error]:`, err.message);
+    console.log(`[Detector Video] Falling back to simulation mode.`);
+    runSimulationMode();
+  }
+}
+
+/**
  * Process a single image or folder of images
  */
 async function processImages() {
