@@ -9,14 +9,18 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 export default function App() {
   const [detections, setDetections] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch initial historical detections
   const fetchDetections = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.get(`${API_URL}/api/detections`);
       setDetections(response.data);
     } catch (err) {
       console.warn('Could not fetch historical detections from backend:', err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,18 +67,21 @@ export default function App() {
   };
 
   return (
-    <div className="focused-app-container">
-      <div className="focused-app-grid">
-        {/* Card 1: AI Detection & Verification Studio */}
-        <InspectionStudio apiUrl={API_URL} />
+    <div className="platform-app-wrapper">
+      <main className="platform-main-container">
+        <div className="platform-grid">
+          {/* Card 1: AI Detection & Verification Studio */}
+          <InspectionStudio apiUrl={API_URL} />
 
-        {/* Card 2: Incident Feed Stream */}
-        <DetectionList 
-          detections={detections} 
-          onClearAll={handleClearAll}
-          isConnected={isConnected}
-        />
-      </div>
+          {/* Card 2: Incident Feed Stream */}
+          <DetectionList
+            detections={detections}
+            onClearAll={handleClearAll}
+            isConnected={isConnected}
+            isLoading={isLoading}
+          />
+        </div>
+      </main>
     </div>
   );
 }

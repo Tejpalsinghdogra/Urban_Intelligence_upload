@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  UploadCloud, 
-  CheckCircle2, 
-  Loader2, 
-  Image as ImageIcon, 
-  MapPin, 
-  Cpu, 
-  Car, 
-  AlertTriangle, 
+import {
+  UploadCloud,
+  CheckCircle2,
+  Loader2,
+  Image as ImageIcon,
+  MapPin,
+  Cpu,
+  Car,
+  AlertTriangle,
   ExternalLink,
   RefreshCw,
   Sparkles,
@@ -20,8 +20,14 @@ import {
   Clock,
   Square,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  Zap,
+  Crosshair,
+  Scan,
+  Flame,
+  Activity
 } from 'lucide-react';
+import AudioWaveform from './AudioWaveform';
 
 export default function InspectionStudio({ apiUrl }) {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -32,13 +38,13 @@ export default function InspectionStudio({ apiUrl }) {
   const [errorMessage, setErrorMessage] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('Detecting GPS...');
-  
+
   // Video specific state
   const [videoDuration, setVideoDuration] = useState(0);
   const [samplingInterval, setSamplingInterval] = useState(2); // every 2 seconds
   const [videoProgress, setVideoProgress] = useState({ currentFrame: 0, totalFrames: 0, currentTime: 0, percent: 0 });
   const [timelineResults, setTimelineResults] = useState([]);
-  
+
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const cancelScanRef = useRef(false);
@@ -103,7 +109,7 @@ export default function InspectionStudio({ apiUrl }) {
   const extractFrameAtTimestamp = (videoEl, targetTime) => {
     return new Promise((resolve) => {
       const safeTime = Math.min(targetTime, videoEl.duration || targetTime);
-      
+
       const capture = () => {
         try {
           const canvas = document.createElement('canvas');
@@ -189,7 +195,7 @@ export default function InspectionStudio({ apiUrl }) {
     cancelScanRef.current = false;
 
     const duration = videoEl.duration || 10;
-    
+
     // Generate timestamps array
     const timestamps = [];
     for (let t = 0; t <= duration; t += samplingInterval) {
@@ -328,7 +334,7 @@ export default function InspectionStudio({ apiUrl }) {
       <div className="studio-header">
         <div className="studio-title-group">
           <div className="studio-icon-badge">
-            <Cpu size={20} color="#38bdf8" />
+            <Cpu size={20} color="#2563eb" />
           </div>
           <div>
             <h2 className="studio-title">AI Road Inspection Studio</h2>
@@ -359,7 +365,7 @@ export default function InspectionStudio({ apiUrl }) {
 
       <div className="studio-body">
         {/* Upload Dropzone */}
-        <div 
+        <div
           className={`studio-dropzone ${previewUrl ? 'has-preview' : ''} ${isAnalyzing ? 'analyzing' : ''}`}
           onClick={() => !previewUrl && fileInputRef.current?.click()}
         >
@@ -382,7 +388,7 @@ export default function InspectionStudio({ apiUrl }) {
                     controls={!isAnalyzing}
                     playsInline
                     muted
-                    className="preview-video"
+                    className={`preview-video ${isAnalyzing ? 'image-analyzing-blur' : ''}`}
                   />
                   <div className="video-format-pill">
                     <Film size={12} />
@@ -390,25 +396,29 @@ export default function InspectionStudio({ apiUrl }) {
                   </div>
                 </div>
               ) : (
-                <img src={previewUrl} alt="Inspection Candidate" className="preview-image" />
+                <img
+                  src={previewUrl}
+                  alt="Inspection Candidate"
+                  className={`preview-image ${isAnalyzing ? 'image-analyzing-blur' : ''}`}
+                />
               )}
-              
-              {/* Computer Vision LiDAR Laser Scanning Beam */}
+
+              {/* Computer Vision LiDAR Laser Scanning Beam & HUD */}
               {isAnalyzing && (
                 <div className="laser-scanner-overlay">
                   <div className="laser-scanner-beam"></div>
                   <div className="laser-scanner-hud">
-                    <span className="hud-radar-dot"></span>
+                    <Loader2 size={16} className="spinner-icon" color="#60a5fa" />
                     <span>
-                      {fileType === 'video' 
-                        ? `SCANNING VIDEO FRAME ${videoProgress.currentFrame}/${videoProgress.totalFrames} (${formatTime(videoProgress.currentTime)})...` 
-                        : 'RUNNING INFERENCE PIPELINE...'}
+                      {fileType === 'video'
+                        ? `Scanning video frame ${videoProgress.currentFrame} of ${videoProgress.totalFrames} (${formatTime(videoProgress.currentTime)})...`
+                        : 'Verifying image with multi-model AI pipeline...'}
                     </span>
                   </div>
                 </div>
               )}
 
-              <button 
+              <button
                 className="change-image-btn"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -421,7 +431,7 @@ export default function InspectionStudio({ apiUrl }) {
           ) : (
             <div className="dropzone-prompt">
               <div className="dropzone-icon-circle">
-                <UploadCloud size={30} color="#38bdf8" />
+                <UploadCloud size={30} color="#2563eb" />
               </div>
               <p className="dropzone-main-text">Upload Video Feed (MP4) or Road Surface Photo</p>
               <p className="dropzone-sub-text">Dashcam footage, transit surveillance, or road defect snapshots</p>
@@ -441,11 +451,18 @@ export default function InspectionStudio({ apiUrl }) {
           {/* Target Coordinates */}
           <div className="control-metric-box">
             <div className="control-metric-label">
-              <MapPin size={13} color="#38bdf8" />
+              <MapPin size={13} color="#2563eb" />
               <span>Target Incident Coordinates</span>
             </div>
             <div className="control-metric-value">
-              <span className="coord-mono">{locationStatus}</span>
+              {locationStatus.includes('Detecting') || locationStatus.includes('Acquiring') ? (
+                <span className="coord-mono" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <Loader2 size={12} className="spinner-icon" color="#2563eb" />
+                  <span>{locationStatus}</span>
+                </span>
+              ) : (
+                <span className="coord-mono">{locationStatus}</span>
+              )}
               <button onClick={getExactLocation} className="refresh-gps-btn" title="Re-detect GPS Coordinates">
                 <RefreshCw size={12} />
               </button>
@@ -456,7 +473,7 @@ export default function InspectionStudio({ apiUrl }) {
           {fileType === 'video' && (
             <div className="control-metric-box video-sampling-box">
               <div className="control-metric-label">
-                <SlidersHorizontal size={13} color="#38bdf8" />
+                <SlidersHorizontal size={13} color="#2563eb" />
                 <span>AI Frame Sampling Interval</span>
               </div>
               <div className="sampling-interval-options">
@@ -478,16 +495,6 @@ export default function InspectionStudio({ apiUrl }) {
             </div>
           )}
 
-          {/* Cloud Archive Vault */}
-          <div className="control-metric-box">
-            <div className="control-metric-label">
-              <Sparkles size={13} color="#f59e0b" />
-              <span>Cloud Archive Vault</span>
-            </div>
-            <div className="control-metric-value">
-              <span className="cloud-vault-tag">Cloudinary: urban_intelligence/road_defects</span>
-            </div>
-          </div>
 
           {/* Video Live Progress Bar */}
           {isAnalyzing && fileType === 'video' && (
@@ -497,8 +504,8 @@ export default function InspectionStudio({ apiUrl }) {
                 <span className="progress-pct">{videoProgress.percent}%</span>
               </div>
               <div className="video-progress-track">
-                <div 
-                  className="video-progress-bar" 
+                <div
+                  className="video-progress-bar"
                   style={{ width: `${videoProgress.percent}%` }}
                 ></div>
               </div>
@@ -507,7 +514,7 @@ export default function InspectionStudio({ apiUrl }) {
 
           <div className="studio-action-row">
             {previewUrl && (
-              <button 
+              <button
                 onClick={resetStudio}
                 className="btn-secondary"
                 disabled={isAnalyzing}
@@ -528,11 +535,11 @@ export default function InspectionStudio({ apiUrl }) {
               <button
                 onClick={fileType === 'video' ? handleAnalyzeVideo : handleAnalyzeImage}
                 disabled={!previewUrl || isAnalyzing}
-                className="btn-primary"
+                className={`btn-primary ${isAnalyzing ? 'is-analyzing' : ''}`}
               >
                 {isAnalyzing ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={16} className="spinner-icon" color="#ffffff" />
                     <span>Processing Tri-Model AI...</span>
                   </>
                 ) : (
@@ -552,7 +559,7 @@ export default function InspectionStudio({ apiUrl }) {
         <div className="video-timeline-card">
           <div className="timeline-header">
             <div className="timeline-title">
-              <Film size={16} color="#38bdf8" />
+              <Film size={16} color="#2563eb" />
               <span>Video Frame Telemetry Stream ({timelineResults.length} Samples)</span>
             </div>
             <span className="timeline-hint">Click any timestamp to seek video</span>
@@ -560,8 +567,8 @@ export default function InspectionStudio({ apiUrl }) {
 
           <div className="timeline-chips-row">
             {timelineResults.map((item, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className={`timeline-chip ${item.potholes > 0 ? 'has-pothole' : ''} ${item.congestion === 'HIGH' ? 'heavy-traffic' : ''}`}
                 onClick={() => jumpToTime(item.timeSec)}
                 title={`Click to jump to ${item.timeFormatted}`}
@@ -578,12 +585,12 @@ export default function InspectionStudio({ apiUrl }) {
                   )}
                   {item.vehicles > 0 && (
                     <span className="chip-badge cyan">
-                      <Car size={10} /> {item.vehicles} Veh ({item.congestion})
+                      <Car size={10} /> {item.vehicles} {item.vehicles === 1 ? 'Vehicle' : 'Vehicles'} ({item.congestion})
                     </span>
                   )}
                   {item.pedestrians > 0 && (
                     <span className="chip-badge purple">
-                      <User size={10} /> {item.pedestrians} Ped
+                      <User size={10} /> {item.pedestrians} {item.pedestrians === 1 ? 'Pedestrian' : 'Pedestrians'}
                     </span>
                   )}
                   {item.potholes === 0 && item.vehicles === 0 && item.pedestrians === 0 && (
@@ -603,19 +610,19 @@ export default function InspectionStudio({ apiUrl }) {
             <div className="result-badge-success">
               <CheckCircle2 size={16} />
               <span>
-                {resultData.isVideoResult 
-                  ? `Video Analysis Completed (${resultData.totalFramesScanned} Frames Evaluated) • Telemetry Broadcasted Live` 
-                  : 'Verification Completed • Archived to Atlas & Cloudinary'}
+                {resultData.isVideoResult
+                  ? `Video Analysis Completed (${resultData.totalFramesScanned} Frames Evaluated) • Telemetry Broadcasted Live`
+                  : 'Verification Completed • Telemetry Recorded & Verified'}
               </span>
             </div>
             {resultData.cloudImageUrl && (
-              <a 
-                href={resultData.cloudImageUrl} 
-                target="_blank" 
+              <a
+                href={resultData.cloudImageUrl}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="cloudinary-pill-link"
+                className="snapshot-link-pill"
               >
-                <span>Inspect in Cloudinary</span>
+                <span>View Verified Image</span>
                 <ExternalLink size={12} />
               </a>
             )}
@@ -628,7 +635,7 @@ export default function InspectionStudio({ apiUrl }) {
                 <span className="stat-card-label">
                   {resultData.isVideoResult ? 'Total Potholes Flagged' : 'Potholes Detected'}
                 </span>
-                <AlertTriangle size={15} color="#fbbf24" />
+                <AlertTriangle size={15} color="#d97706" />
               </div>
               <div className="stat-card-body">
                 <span className="stat-card-number amber">
@@ -646,7 +653,7 @@ export default function InspectionStudio({ apiUrl }) {
                 <span className="stat-card-label">
                   {resultData.isVideoResult ? 'Peak Vehicles In Frame' : 'Vehicles Counted'}
                 </span>
-                <Car size={15} color="#38bdf8" />
+                <Car size={15} color="#2563eb" />
               </div>
               <div className="stat-card-body">
                 <span className="stat-card-number blue">
@@ -664,7 +671,7 @@ export default function InspectionStudio({ apiUrl }) {
                 <span className="stat-card-label">
                   {resultData.isVideoResult ? 'Total Pedestrians Spotted' : 'Pedestrians Detected'}
                 </span>
-                <User size={15} color="#c084fc" />
+                <User size={15} color="#7c3aed" />
               </div>
               <div className="stat-card-body">
                 <span className="stat-card-number purple">
@@ -677,19 +684,17 @@ export default function InspectionStudio({ apiUrl }) {
             </div>
 
             {/* Congestion Index Metric */}
-            <div className={`diagnostic-stat-card ${
-              resultData.aiResults?.vehicles?.congestion === 'HIGH' ? 'rose-tint' :
-              resultData.aiResults?.vehicles?.congestion === 'MEDIUM' ? 'amber-tint' : 'emerald-tint'
-            }`}>
+            <div className={`diagnostic-stat-card ${resultData.aiResults?.vehicles?.congestion === 'HIGH' ? 'rose-tint' :
+                resultData.aiResults?.vehicles?.congestion === 'MEDIUM' ? 'amber-tint' : 'emerald-tint'
+              }`}>
               <div className="stat-card-top">
                 <span className="stat-card-label">Congestion Index</span>
                 <Sparkles size={15} />
               </div>
               <div className="stat-card-body">
-                <span className={`stat-card-number ${
-                  resultData.aiResults?.vehicles?.congestion === 'HIGH' ? 'rose' :
-                  resultData.aiResults?.vehicles?.congestion === 'MEDIUM' ? 'amber' : 'emerald'
-                }`}>
+                <span className={`stat-card-number ${resultData.aiResults?.vehicles?.congestion === 'HIGH' ? 'rose' :
+                    resultData.aiResults?.vehicles?.congestion === 'MEDIUM' ? 'amber' : 'emerald'
+                  }`}>
                   {resultData.aiResults?.vehicles?.congestion || 'LOW'}
                 </span>
                 <span className="stat-card-status">
@@ -703,7 +708,7 @@ export default function InspectionStudio({ apiUrl }) {
 
       {errorMessage && (
         <div className="studio-error-banner">
-          <AlertTriangle size={16} color="#fb7185" />
+          <AlertTriangle size={16} color="#e11d48" />
           <span>{errorMessage}</span>
         </div>
       )}

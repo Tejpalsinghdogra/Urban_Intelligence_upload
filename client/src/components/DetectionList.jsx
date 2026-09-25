@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  ListFilter, 
-  AlertTriangle, 
-  Car, 
-  Clock, 
-  MapPin, 
-  Trash2, 
-  Radio, 
-  User, 
+import {
+  ListFilter,
+  AlertTriangle,
+  Car,
+  Clock,
+  MapPin,
+  Trash2,
+  Radio,
+  User,
   ExternalLink,
   Eye,
   X,
   ShieldCheck,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 
 // Format relative timestamp (e.g. "Just now", "2m ago")
@@ -30,7 +31,7 @@ function formatRelativeTime(dateStr) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function DetectionList({ detections, onClearAll, isConnected }) {
+export default function DetectionList({ detections, onClearAll, isConnected, isLoading }) {
   const [filterType, setFilterType] = useState('all');
   const [activeModalImg, setActiveModalImg] = useState(null);
 
@@ -46,23 +47,29 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
         <div className="feed-card-header">
           <div className="feed-header-left">
             <div className="feed-icon-circle">
-              <Radio size={16} color="#06b6d4" />
+              <Radio size={16} color="#2563eb" />
             </div>
             <div>
               <div className="feed-title-line">
                 <h3 className="feed-title">Real-Time Incident Stream</h3>
-                <span className="feed-count-badge">{detections.length}</span>
+                <span className="feed-count-badge">
+                  {detections.length} {detections.length === 1 ? 'Incident' : 'Incidents'}
+                </span>
               </div>
-              <p className="feed-subtitle">Live vision telemetry recorded to Atlas cluster</p>
+              <p className="feed-subtitle">Live vision telemetry and incident feed</p>
             </div>
           </div>
 
           <div className="feed-header-right">
+            <div className={`stream-status-indicator ${isConnected ? 'live' : 'offline'}`}>
+              <span className="stream-status-dot"></span>
+              <span>{isConnected ? 'Stream Active' : 'Connecting...'}</span>
+            </div>
             {onClearAll && (
               <button
                 onClick={onClearAll}
                 className="btn-reset-feed"
-                title="Wipe feed from MongoDB Atlas & Cloudinary"
+                title="Clear all recorded incidents"
               >
                 <Trash2 size={13} />
                 <span>Reset Feed</span>
@@ -107,11 +114,17 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
 
         {/* Incident Items Feed */}
         <div className="incident-list">
-          {filteredDetections.length === 0 ? (
+          {isLoading ? (
+            <div className="feed-loading-state">
+              <Loader2 size={32} className="spinner-icon" color="#2563eb" />
+              <p className="loading-text">Loading Incident Stream...</p>
+              <span className="loading-subtext">Fetching real-time telemetry records</span>
+            </div>
+          ) : filteredDetections.length === 0 ? (
             <div className="empty-state">
               <div className="empty-radar-circle">
                 <div className="radar-sweep"></div>
-                <Radio size={28} color="#06b6d4" />
+                <Radio size={28} color="#2563eb" />
               </div>
               <p className="empty-title">Awaiting Vision Telemetry</p>
               <span className="empty-subtext">
@@ -153,22 +166,31 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
                     </div>
                   </div>
 
-                  {/* Right Column: Metrics & Cloudinary Snapshot */}
+                  {/* Right Column: Metrics & Verified Snapshot */}
                   <div className="incident-right-col">
                     <div className="metrics-pill-cluster">
                       <span className="confidence-pill" title="Model Confidence Rating">
-                        {(item.confidence * 100).toFixed(0)}% conf
+                        {(item.confidence * 100).toFixed(0)}% Confidence
                       </span>
 
                       {item.type === 'vehicle' && (item.vehicleCount !== undefined || item.count !== undefined) && (
                         <span className="vehicle-count-pill">
-                          Count: {item.vehicleCount || item.count}
+                          <Car size={11} />
+                          <span>{(item.vehicleCount || item.count) === 1 ? '1 Vehicle' : `${item.vehicleCount || item.count} Vehicles`}</span>
                         </span>
                       )}
 
                       {item.type === 'pedestrian' && item.count !== undefined && (
                         <span className="pedestrian-count-pill">
-                          Count: {item.count}
+                          <User size={11} />
+                          <span>{item.count === 1 ? '1 Pedestrian' : `${item.count} Pedestrians`}</span>
+                        </span>
+                      )}
+
+                      {item.type === 'pothole' && (
+                        <span className="pothole-severity-pill">
+                          <AlertTriangle size={11} />
+                          <span>1 Surface Defect</span>
                         </span>
                       )}
                     </div>
@@ -190,7 +212,7 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="cloud-direct-link"
-                          title="Open Original in Cloudinary"
+                          title="Open Original Image"
                         >
                           <ExternalLink size={11} />
                         </a>
@@ -212,8 +234,8 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <div className="lightbox-header">
               <div className="lightbox-title-group">
-                <ShieldCheck size={18} color="#34d399" />
-                <span className="lightbox-title">Verified Cloudinary Snapshot</span>
+                <ShieldCheck size={18} color="#059669" />
+                <span className="lightbox-title">Verified Incident Snapshot</span>
               </div>
               <button className="lightbox-close-btn" onClick={() => setActiveModalImg(null)}>
                 <X size={16} />
@@ -230,10 +252,10 @@ export default function DetectionList({ detections, onClearAll, isConnected }) {
                 <span>Type: {activeModalImg.item.type.toUpperCase()}</span>
                 <span>Recorded: {new Date(activeModalImg.item.timestamp).toLocaleString()}</span>
               </div>
-              <a 
-                href={activeModalImg.url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={activeModalImg.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-open-cloud"
               >
                 <span>View Full Resolution</span>
