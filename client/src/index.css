@@ -136,6 +136,55 @@ body::before {
   gap: 1.5rem;
 }
 
+/* ==========================================================================
+   WORKSPACE BRAND HEADER (LOGO INTEGRATION)
+   ========================================================================== */
+
+.platform-brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.25rem 0.5rem;
+}
+
+.platform-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.platform-brand-logo {
+  height: 52px;
+  width: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
+  object-fit: contain;
+  background: #ffffff;
+  padding: 3px 5px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.platform-brand-logo:hover {
+  transform: scale(1.03);
+  box-shadow: var(--shadow-md);
+}
+
+.platform-brand-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.platform-brand-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 0.15rem;
+}
+
 .platform-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
@@ -1657,3 +1706,49 @@ body::before {
   color: var(--text-secondary);
 }
 
+
+/* ==========================================================================
+   Brand Header & Logo Styling
+   ========================================================================== */
+.platform-brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--radius-xl, 14px);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  margin-bottom: 0.25rem;
+}
+
+.platform-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.platform-brand-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.platform-brand-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.platform-brand-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0.15rem 0 0 0;
+}

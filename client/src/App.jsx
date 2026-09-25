@@ -69,6 +69,17 @@ export default function App() {
   return (
     <div className="platform-app-wrapper">
       <main className="platform-main-container">
+        {/* Workspace Brand Header */}
+        <header className="platform-brand-header">
+          <div className="platform-brand-left">
+            <img src="/logo.jpg" alt="Urban Sight Logo" className="platform-brand-logo" />
+            <div>
+              <h1 className="platform-brand-title">Urban Sight</h1>
+              <p className="platform-brand-subtitle">AI-Powered Road Inspection & Transit Vision Intelligence</p>
+            </div>
+          </div>
+        </header>
+
         <div className="platform-grid">
           {/* Card 1: AI Detection & Verification Studio */}
           <InspectionStudio apiUrl={API_URL} />
