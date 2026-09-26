@@ -333,13 +333,11 @@ export default function InspectionStudio({ apiUrl }) {
       {/* Studio Header */}
       <div className="studio-header">
         <div className="studio-title-group">
-          <div className="studio-icon-badge">
-            <Cpu size={20} color="#2563eb" />
-          </div>
+          <img src="/logo.jpg" alt="Urban Sight AI Logo" className="studio-logo-img" />
           <div>
-            <h2 className="studio-title">AI Road Inspection Studio</h2>
+            <h2 className="studio-title">Urban Sight AI</h2>
             <p className="studio-subtitle">
-              Parallel Vision Pipeline: Potholes, Traffic Congestion & Pedestrian Safety
+              Road Inspection: Potholes, Traffic Congestion & Pedestrian Safety
             </p>
           </div>
         </div>

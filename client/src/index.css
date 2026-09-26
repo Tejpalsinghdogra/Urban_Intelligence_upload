@@ -257,6 +257,17 @@ body::before {
   flex-shrink: 0;
 }
 
+.studio-logo-img {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  object-fit: contain;
+  flex-shrink: 0;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  padding: 2px;
+}
+
 .studio-title {
   font-size: 1.25rem;
   font-weight: 700;
